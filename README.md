@@ -26,6 +26,8 @@ Cloudflare WorkersのGit連携では、次の設定を使用します。
 - Deploy command: `pnpm wrangler deploy`
 - Root directory: `/`
 
+`main`ブランチへのpushはCloudflare Buildsによって自動的に本番へデプロイされます。
+
 初回のE2E実行前にChromiumをインストールしてください。
 
 ```bash
