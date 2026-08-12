@@ -17,6 +17,18 @@ pnpm dev
 - `pnpm test:e2e` — Playwright E2Eテスト
 - `pnpm deploy` — ビルドしてCloudflare Workersへデプロイ
 
+## D1
+
+認定証はCloudflare D1の`ffpf-certifications-db`に保存されます。
+
+```bash
+pnpm exec wrangler d1 migrations apply ffpf-certifications-db --local
+pnpm exec wrangler d1 migrations apply ffpf-certifications-db --remote
+```
+
+ローカルでWorker APIとD1を含めて確認する場合は、先に`pnpm build`を実行してから
+`pnpm exec wrangler dev`を使用します。
+
 ## Cloudflare Builds
 
 Cloudflare WorkersのGit連携では、次の設定を使用します。
