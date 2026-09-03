@@ -2,6 +2,12 @@
 
 Fuwa Fuwa Pomodoro Federationの連邦公認資格を作成・閲覧するWebアプリケーションです。
 
+## 本番環境
+
+- デプロイ先: Cloudflare Workers
+- 本番URL: [https://ffpf-certifications.sparklingstadt.workers.dev/](https://ffpf-certifications.sparklingstadt.workers.dev/)
+- 動作確認: 2026年9月3日に本番URLをブラウザで開き、連邦公認資格一覧を閲覧し、「認定証を作る」から認定証登録画面を開けることを確認しました。登録データの送信は行っていません。
+
 ## 開発
 
 ```bash
