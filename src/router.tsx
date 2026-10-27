@@ -6,7 +6,15 @@ import {
 import { HomePage, RootLayout } from './pages'
 import { CertificateForm } from './features/certificates/CertificateForm'
 
-const rootRoute = createRootRoute({ component: RootLayout })
+type RootSearch = {
+  login?: 'failed'
+}
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
+  validateSearch: (search: Record<string, unknown>): RootSearch =>
+    search.login === 'failed' ? { login: 'failed' } : {},
+})
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,

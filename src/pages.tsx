@@ -1,6 +1,13 @@
-import { Link, Outlet } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { Link, Outlet, useLocation, useSearch } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCertificates } from './features/certificates/api'
+import {
+  sessionQueryKey,
+  signInUrl,
+  signOut,
+  useSession,
+  type SessionResponse,
+} from './features/auth/api'
 
 const dateFormatter = new Intl.DateTimeFormat('ja-JP', {
   year: 'numeric',
@@ -9,7 +16,42 @@ const dateFormatter = new Intl.DateTimeFormat('ja-JP', {
   timeZone: 'UTC',
 })
 
+function AccountMenu() {
+  const pathname = useLocation({ select: (location) => location.pathname })
+  const queryClient = useQueryClient()
+  const session = useSession()
+  const logout = useMutation({
+    mutationFn: signOut,
+    onSuccess: () => {
+      queryClient.setQueryData<SessionResponse>(sessionQueryKey, (current) =>
+        current && { ...current, user: null })
+    },
+  })
+
+  if (!session.data?.enabled) return null
+
+  if (!session.data.user) {
+    return <a href={signInUrl(pathname)} className="account-link">FFPF IDでログイン</a>
+  }
+
+  return (
+    <div className="account">
+      <span className="account-name">{session.data.user.name}</span>
+      <button
+        type="button"
+        className="account-logout"
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+      >
+        ログアウト
+      </button>
+    </div>
+  )
+}
+
 export function RootLayout() {
+  const search = useSearch({ strict: false })
+
   return (
     <div className="app-shell">
       <header>
@@ -17,8 +59,14 @@ export function RootLayout() {
         <nav aria-label="メインナビゲーション">
           <Link to="/" activeOptions={{ exact: true }}>資格一覧</Link>
           <Link to="/certificates/new">認定証を登録</Link>
+          <AccountMenu />
         </nav>
       </header>
+      {search.login === 'failed' && (
+        <p className="notice notice-error login-failed" role="alert">
+          FFPF IDでログインできませんでした。もう一度お試しください。
+        </p>
+      )}
       <main><Outlet /></main>
     </div>
   )

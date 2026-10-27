@@ -4,6 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
 import { createCertificate } from './api'
+import { sessionQueryKey, signInUrl, useSession } from '../auth/api'
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -20,7 +21,39 @@ const schema = yup.object({
 
 type CertificateInput = yup.InferType<typeof schema>
 
+// 認定証の登録はFFPF IDでログインしている人だけができる。
 export function CertificateForm() {
+  const session = useSession()
+
+  return (
+    <section className="panel">
+      <p className="eyebrow">Federal registration</p>
+      <h1>認定証を登録</h1>
+      {session.isPending && <p role="status" className="notice">ログイン状態を確認しています…</p>}
+      {session.isError && (
+        <div className="notice notice-error" role="alert">
+          <p>{session.error.message}</p>
+          <button type="button" onClick={() => session.refetch()}>もう一度確認する</button>
+        </div>
+      )}
+      {session.data && !session.data.user && (
+        <div className="notice login-required">
+          {session.data.enabled ? (
+            <>
+              <p>認定証の登録にはFFPF IDでのログインが必要です。</p>
+              <a href={signInUrl('/certificates/new')} className="button">FFPF IDでログイン</a>
+            </>
+          ) : (
+            <p>現在FFPF IDでのログインを利用できないため、認定証を登録できません。</p>
+          )}
+        </div>
+      )}
+      {session.data?.user && <CertificateFields />}
+    </section>
+  )
+}
+
+function CertificateFields() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { register, handleSubmit, formState: { errors } } = useForm<CertificateInput>({
@@ -33,12 +66,12 @@ export function CertificateForm() {
       await queryClient.invalidateQueries({ queryKey: ['certificates'] })
       await navigate({ to: '/' })
     },
+    // セッションが切れていた場合に、ログインの案内へ切り替える。
+    onError: () => queryClient.invalidateQueries({ queryKey: sessionQueryKey }),
   })
 
   return (
-    <section className="panel">
-      <p className="eyebrow">Federal registration</p>
-      <h1>認定証を登録</h1>
+    <>
       <form onSubmit={handleSubmit((values) => mutation.mutate(values))} noValidate>
         <label>
           認定名
@@ -65,6 +98,6 @@ export function CertificateForm() {
         </button>
         {mutation.isError && <p role="alert">{mutation.error.message}</p>}
       </form>
-    </section>
+    </>
   )
 }

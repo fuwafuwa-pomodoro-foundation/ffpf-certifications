@@ -8,3 +8,4 @@ blob-report
 .wrangler
 *.local
 ffpf-certifications-pages*.zip
+.dev.vars
