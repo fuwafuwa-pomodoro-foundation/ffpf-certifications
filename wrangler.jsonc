@@ -10,6 +10,11 @@
 		"not_found_handling": "single-page-application",
 		"run_worker_first": ["/api/*"]
 	},
+	// FFPF_ID_CLIENT_SECRETとFFPF_SESSION_SECRETはシークレットとして設定する（README参照）。
+	"vars": {
+		"FFPF_ID_ISSUER": "https://ffpf-portal.vercel.app",
+		"FFPF_ID_CLIENT_ID": "ffpf-certifications"
+	},
 	"observability": {
 		"enabled": true,
 		"head_sampling_rate": 1

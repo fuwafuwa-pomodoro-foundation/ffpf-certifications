@@ -4,6 +4,10 @@
 interface __BaseEnv_Env {
 	DB: D1Database;
 	ASSETS: Fetcher;
+	FFPF_ID_ISSUER?: string;
+	FFPF_ID_CLIENT_ID?: string;
+	FFPF_ID_CLIENT_SECRET?: string;
+	FFPF_SESSION_SECRET?: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

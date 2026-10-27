@@ -1,4 +1,11 @@
 import type { Certificate, CertificateInput } from '../src/features/certificates/types'
+import {
+  getCurrentUser,
+  handleCallback,
+  handleSession,
+  handleSignIn,
+  handleSignOut,
+} from './auth'
 
 const MAX_BODY_BYTES = 16 * 1024
 const MAX_CERTIFICATES = 100
@@ -10,6 +17,12 @@ function json(data: unknown, init: ResponseInit = {}): Response {
   headers.set('Content-Type', 'application/json; charset=utf-8')
   headers.set('Cache-Control', 'no-store')
   return Response.json(data, { ...init, headers })
+}
+
+// 状態を変える要求は、ほかのサイトから送られたものを受け付けない。
+function isCrossOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin')
+  return origin !== null && origin !== new URL(request.url).origin
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -83,6 +96,14 @@ async function listCertificates(env: Env): Promise<Response> {
 }
 
 async function insertCertificate(request: Request, env: Env): Promise<Response> {
+  if (isCrossOrigin(request)) {
+    return json({ error: 'このサイト以外からは登録できません。' }, { status: 403 })
+  }
+
+  if (!await getCurrentUser(request, env)) {
+    return json({ error: '認定証の登録にはFFPF IDでのログインが必要です。' }, { status: 401 })
+  }
+
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
     return json({ error: 'JSON形式で送信してください。' }, { status: 415 })
   }
@@ -127,6 +148,32 @@ async function insertCertificate(request: Request, env: Env): Promise<Response> 
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url)
+
+    if (url.pathname.startsWith('/api/auth/')) {
+      try {
+        if (url.pathname === '/api/auth/session' && request.method === 'GET') {
+          return await handleSession(request, env)
+        }
+        if (url.pathname === '/api/auth/signin' && request.method === 'GET') {
+          return await handleSignIn(request, env)
+        }
+        if (url.pathname === '/api/auth/callback/ffpf' && request.method === 'GET') {
+          return await handleCallback(request, env)
+        }
+        if (url.pathname === '/api/auth/signout' && request.method === 'POST') {
+          if (isCrossOrigin(request)) return json({ error: '許可されていない要求です。' }, { status: 403 })
+          return handleSignOut(request)
+        }
+        return json({ error: '見つかりません。' }, { status: 404 })
+      } catch (error) {
+        console.error(JSON.stringify({
+          event: 'auth_api_error',
+          path: url.pathname,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }))
+        return json({ error: 'サーバーで問題が発生しました。' }, { status: 500 })
+      }
+    }
 
     if (url.pathname === '/api/certificates') {
       try {
