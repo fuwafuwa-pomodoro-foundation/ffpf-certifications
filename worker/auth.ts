@@ -30,10 +30,21 @@ function getAuthConfig(env: Env) {
   return ffpf && secret ? { ffpf, secret } : null
 }
 
+const SAME_SITE_BASE = 'https://same-site.invalid'
+
 // このサイト内のパスだけを戻り先にする（//example.comなどで外へ出さない）。
+// ブラウザはURL中のタブや改行を取り除くため（/\t/evil.com → //evil.com）、
+// 文字列で判定せずURLとして解釈し、解釈後のパスだけを返す。
 function safeNext(value: string | null): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/'
-  return value
+  if (!value || !value.startsWith('/') || [...value].some((c) => c <= ' ' || c === '\\')) return '/'
+  let parsed: URL
+  try {
+    parsed = new URL(value, SAME_SITE_BASE)
+  } catch {
+    return '/'
+  }
+  if (parsed.origin !== SAME_SITE_BASE) return '/'
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`
 }
 
 function redirect(location: string, cookies: string[] = []): Response {
