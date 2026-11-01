@@ -4,3 +4,8 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - miniflare@5.20260804.1-alpha
   - wrangler@4.121.0
+overrides:
+  # GHSA-7rv5-mrxv-xcr9, GHSA-97r2-qh9m-474h, GHSA-wp97-x4hv-qvhp, GHSA-9wx9-5pv9-3349, GHSA-f86p-h4j2-7qgj
+  seroval@<1.6.11: ^1.6.11
+  # GHSA-2m5v-pch6-74hx, GHSA-4w7w-5xrc-9h26, GHSA-qrxm-fqhp-jwvm, GHSA-9fm3-97px-rjf6, GHSA-55wc-3pg8-jfw6 and others (pulled in by miniflare)
+  undici@>=7.0.0 <7.30.1: ^7.30.1
